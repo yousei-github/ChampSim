@@ -31,7 +31,7 @@ When you have those two files, you need to replace their contents with those in 
 Following the above instructions, you should be able to compile and debug the ChampSim project using Visual Studio Code's method.
 
 ## Build
-* Click `Run Build Task` in the `Terminal` tab.
+Click `Run Build Task` in the `Terminal` tab.
 
 ## Debug
 Click `Start Debugging` in the `Run` tab.
