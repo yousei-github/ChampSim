@@ -24,7 +24,7 @@ $ cp champsim_directory/new_files/no_instr/no.cc champsim_directory/prefetcher/n
 
 Next, in order to compile and debug the ChampSim project using Visual Studio Code's method, you need to create two files, `tasks.json` and `launch.json`, by referring to the official documentation at here (https://code.visualstudio.com/docs/cpp/config-linux). Note now, you might not be able to compile and debug the source codes with those files.
 
-When you have those two files, you need to replace their contents with those in the same name at this branch's `vscode` directory. Note that you may need to modify the contents on your own, such as the compiler's path.
+When you have those two files, you need to replace their contents with those in the same name at this branch's [vscode](https://github.com/yousei-github/ChampSim/tree/visual_studio_code/vscode) directory. Note that you may need to modify the contents on your own, such as the compiler's path.
 
 # Compile and debug
 
