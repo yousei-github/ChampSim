@@ -32,10 +32,6 @@ Following the above instructions, you should be able to compile and debug the Ch
 
 ## Build
 * Click `Run Build Task` in the `Terminal` tab.
-* Input command in Terminal, for example,
-```
-$ ./bin/champsim --warmup_instructions 1000000 --simulation_instructions 50000000 ../path_to_traces/600.perlbench_s-210B.champsimtrace.xz
-```
 
 ## Debug
 Click `Start Debugging` in the `Run` tab.
