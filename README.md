@@ -3,69 +3,45 @@
   <p> ChampSim is a trace-based simulator for a microarchitecture study. You can sign up to the public mailing list by sending an empty mail to champsim+subscribe@googlegroups.com. If you have questions about how to use ChampSim, you can often receive a quicker response on the mailing list. Please reserve GitHub Issues for bugs. <p>
 </p>
 
-# Clone ChampSim repository
+# Visual Studio Code
+This branch is based on the master branch of ChampSim and is modified for comfortable coding experience in Visual Studio Code.
+
+# Modificaton of the master branch of ChampSim
+
+After building the ChampSim from this link (http://github.com/yousei-github/ChampSim/tree/master), you need first copy and replace several files from this branch into your ChampSim directory.
 ```
-git clone https://github.com/ChampSim/ChampSim.git
-```
-
-# Compile
-
-ChampSim takes a JSON configuration script. Examine `champsim_config.json` for a fully-specified example. All options described in this file are optional and will be replaced with defaults if not specified. The configuration scrip can also be run without input, in which case an empty file is assumed.
-```
-$ ./config.sh <configuration file>
-$ make
-```
-
-# Download DPC-3 trace
-
-Professor Daniel Jimenez at Texas A&M University kindly provided traces for the 3rd Data Prefetching Championship (DPC-3). They can be found here (http://hpca23.cse.tamu.edu/champsim-traces/speccpu). A set of traces used for the 2nd Cache Replacement Championship (CRC-2) can be found from this link. (http://bit.ly/2t2nkUj)
-
-# Run simulation
-
-Execute the binary directly.
-```
-$ bin/champsim --warmup_instructions 200000000 --simulation_instructions 500000000 ~/path/to/traces/600.perlbench_s-210B.champsimtrace.xz
+$ cp -r this_branch/new_files/ champsim_directory/
+$ cp champsim_directory/new_files/champsim.h champsim_directory/inc/
+$ cp champsim_directory/new_files/cache.h champsim_directory/inc/
+$ cp champsim_directory/new_files/ooo_cpu.h champsim_directory/inc/
+$ cp champsim_directory/new_files/Configuration.h champsim_directory/inc/
+$ cp champsim_directory/new_files/bimodal.cc champsim_directory/branch/bimodal/
+$ cp champsim_directory/new_files/lru.cc champsim_directory/replacement/lru/
+$ cp champsim_directory/new_files/basic_btb.cc champsim_directory/btb/basic_btb/
+$ cp champsim_directory/new_files/no/no.cc champsim_directory/prefetcher/no/
+$ cp champsim_directory/new_files/no_instr/no.cc champsim_directory/prefetcher/no_instr/
 ```
 
-The number of warmup and simulation instructions given will be the number of instructions retired. Note that the statistics printed at the end of the simulation include only the simulation phase.
+Next, in order to compile and debug the ChampSim project using Visual Studio Code's method, you need to create two files, `tasks.json` and `launch.json`, by referring to the official documentation at here (https://code.visualstudio.com/docs/cpp/config-linux). Note now, you might not be able to compile and debug the source codes with those files.
 
-# Add your own branch predictor, data prefetchers, and replacement policy
-**Copy an empty template**
-```
-$ mkdir prefetcher/mypref
-$ cp prefetcher/no_l2c/no.cc prefetcher/mypref/mypref.cc
-```
+When you have those two files, you need to replace their contents with those in the same name at this branch's `vscode` directory. Note that you may need to modify the contents on your own, such as the compiler's path.
 
-**Work on your algorithms with your favorite text editor**
-```
-$ vim prefetcher/mypref/mypref.cc
-```
+# Compile and debug
 
-**Compile and test**
-Add your prefetcher to the configuration file.
-```
-{
-    "L2C": {
-        "prefetcher": "mypref"
-    }
-}
-```
-Note that the example prefetcher is an L2 prefetcher. You might design a prefetcher for a different level.
+Following the above instructions, you should be able to compile and debug the ChampSim project using Visual Studio Code's method.
 
+## Build
+* Click `Run Build Task` in the `Terminal` tab.
+* Input command in Terminal, for example,
 ```
-$ ./config.sh <configuration file>
-$ make
-$ bin/champsim --warmup_instructions 200000000 --simulation_instructions 500000000 600.perlbench_s-210B.champsimtrace.xz
+$ ./bin/champsim --warmup_instructions 1000000 --simulation_instructions 50000000 ../path_to_traces/600.perlbench_s-210B.champsimtrace.xz
 ```
 
-# How to create traces
+## Debug
+Click `Start Debugging` in the `Run` tab.
 
-Program traces are available in a variety of locations, however, many ChampSim users wish to trace their own programs for research purposes.
-Example tracing utilities are provided in the `tracer/` directory.
+Please be aware this branch only uses bimodal for branch predictor, lru for replacement, no and no_instr for prefetcher. If you want to try other modules, you can modify their source files by referring to this branch's source code. 
 
-# Evaluate Simulation
+# Miscellaneous
 
-ChampSim measures the IPC (Instruction Per Cycle) value as a performance metric. <br>
-There are some other useful metrics printed out at the end of simulation. <br>
-
-Good luck and be a champion! <br>
+If IntelliSense still doesn't work properly, it might be because of the version of the C++ language standard used. To solve this problem, you need to open Visual Studio Code, click `View` -> `Command Palette`, and in the center where a terminal is popped out, input or select `C/C++: Edit Configurations (UI)`. A new file called `c_cpp_properties.json` should be created, and its UI is opened. After you modify `C++ standard` to `gnu++17` (or higher) in that file. IntelliSense should work properly now.
