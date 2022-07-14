@@ -26,7 +26,7 @@ Next, in order to compile and debug the ChampSim project using Visual Studio Cod
 
 When you have those two files, you need to replace their contents with those in the same name at this branch's [vscode](https://github.com/yousei-github/ChampSim/tree/visual_studio_code/vscode) directory. Note that you may need to modify the contents on your own, such as the compiler's path.
 
-# Compile and debug
+# Build and debug
 
 Following the above instructions, you should be able to compile and debug the ChampSim project using Visual Studio Code's method.
 
