@@ -10,7 +10,7 @@ This branch is based on the master branch of ChampSim and is modified for comfor
 
 After building the ChampSim from this link (http://github.com/yousei-github/ChampSim/tree/master), you need first copy and replace several files from this branch into your ChampSim directory.
 ```
-$ cp -r this_branch/new_files/ champsim_directory/
+$ cp -r this_branch/new_files/* champsim_directory/
 $ cp champsim_directory/new_files/champsim.h champsim_directory/inc/
 $ cp champsim_directory/new_files/cache.h champsim_directory/inc/
 $ cp champsim_directory/new_files/ooo_cpu.h champsim_directory/inc/
