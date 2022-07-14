@@ -25,11 +25,12 @@
 #define BRANCH_RETURN 6
 #define BRANCH_OTHER 7
 
-struct ooo_model_instr {
+struct ooo_model_instr
+{
   uint64_t instr_id = 0, ip = 0, event_cycle = 0;
 
   bool is_branch = 0, is_memory = 0, branch_taken = 0, branch_mispredicted = 0, source_added[NUM_INSTR_SOURCES] = {},
-       destination_added[NUM_INSTR_DESTINATIONS_SPARC] = {};
+    destination_added[NUM_INSTR_DESTINATIONS_SPARC] = {};
 
   uint8_t asid[2] = {std::numeric_limits<uint8_t>::max(), std::numeric_limits<uint8_t>::max()};
 

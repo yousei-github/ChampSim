@@ -6,23 +6,34 @@
 #include <iostream>
 #include <string>
 
+#include "Configuration.h" // user file
+
 tracereader::tracereader(uint8_t cpu, std::string _ts) : cpu(cpu), trace_string(_ts)
 {
   std::string last_dot = trace_string.substr(trace_string.find_last_of("."));
 
-  if (trace_string.substr(0, 4) == "http") {
+  if (trace_string.substr(0, 4) == "http")
+  {
     // Check file exists
     char testfile_command[4096];
     sprintf(testfile_command, "wget -q --spider %s", trace_string.c_str());
     FILE* testfile = popen(testfile_command, "r");
-    if (pclose(testfile)) {
+    if (pclose(testfile))
+    {
       std::cerr << "TRACE FILE NOT FOUND" << std::endl;
       assert(0);
     }
     cmd_fmtstr = "wget -qO- -o /dev/null %2$s | %1$s -dc";
-  } else {
+  }
+  else
+  {
+#if USER_CODES == ENABLE
+    // trace is in local folder.
+    // If you want to transplant this code to windows version, you need take care of gzip/xz format
+#endif
     std::ifstream testfile(trace_string);
-    if (!testfile.good()) {
+    if (!testfile.good())
+    {
       std::cerr << "TRACE FILE NOT FOUND" << std::endl;
       assert(0);
     }
@@ -33,7 +44,8 @@ tracereader::tracereader(uint8_t cpu, std::string _ts) : cpu(cpu), trace_string(
     decomp_program = "gzip";
   else if (last_dot[1] == 'x') // xz
     decomp_program = "xz";
-  else {
+  else
+  {
     std::cout << "ChampSim does not support traces other than gz or xz compression!" << std::endl;
     assert(0);
   }
@@ -48,7 +60,8 @@ ooo_model_instr tracereader::read_single_instr()
 {
   T trace_read_instr;
 
-  while (!fread(&trace_read_instr, sizeof(T), 1, trace_file)) {
+  while (!fread(&trace_read_instr, sizeof(T), 1, trace_file))
+  {
     // reached end of file for this trace
     std::cout << "*** Reached end of trace: " << trace_string << std::endl;
 
@@ -67,7 +80,8 @@ void tracereader::open(std::string trace_string)
   char gunzip_command[4096];
   sprintf(gunzip_command, cmd_fmtstr.c_str(), decomp_program.c_str(), trace_string.c_str());
   trace_file = popen(gunzip_command, "r");
-  if (trace_file == NULL) {
+  if (trace_file == NULL)
+  {
     std::cerr << std::endl << "*** CANNOT OPEN TRACE FILE: " << trace_string << " ***" << std::endl;
     assert(0);
   }
@@ -75,7 +89,8 @@ void tracereader::open(std::string trace_string)
 
 void tracereader::close()
 {
-  if (trace_file != NULL) {
+  if (trace_file != NULL)
+  {
     pclose(trace_file);
   }
 }
@@ -92,7 +107,8 @@ public:
   {
     ooo_model_instr trace_read_instr = read_single_instr<cloudsuite_instr>();
 
-    if (!initialized) {
+    if (!initialized)
+    {
       last_instr = trace_read_instr;
       initialized = true;
     }
@@ -117,7 +133,8 @@ public:
   {
     ooo_model_instr trace_read_instr = read_single_instr<input_instr>();
 
-    if (!initialized) {
+    if (!initialized)
+    {
       last_instr = trace_read_instr;
       initialized = true;
     }
@@ -132,9 +149,15 @@ public:
 
 tracereader* get_tracereader(std::string fname, uint8_t cpu, bool is_cloudsuite)
 {
-  if (is_cloudsuite) {
+#if USER_CODES == ENABLE
+  // Note here the return value is affixed with new.
+#endif
+  if (is_cloudsuite)
+  {
     return new cloudsuite_tracereader(cpu, fname);
-  } else {
+  }
+  else
+  {
     return new input_tracereader(cpu, fname);
   }
 }

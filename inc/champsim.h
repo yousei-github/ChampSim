@@ -6,6 +6,8 @@
 #include <exception>
 #include <iostream>
 
+#include "Configuration.h" // user file
+
 #include "champsim_constants.h"
 
 // USEFUL MACROS
@@ -37,14 +39,16 @@ extern uint8_t warmup_complete[NUM_CPUS];
 
 namespace champsim
 {
-struct deadlock : public std::exception {
-  const uint32_t which;
-  explicit deadlock(uint32_t cpu) : which(cpu) {}
-};
+  struct deadlock : public std::exception
+  {
+    const uint32_t which;
+    explicit deadlock(uint32_t cpu) : which(cpu) {}
+  };
 
-struct deprecated_clock_cycle {
-  uint64_t operator[](std::size_t cpu_idx);
-};
+  struct deprecated_clock_cycle
+  {
+    uint64_t operator[](std::size_t cpu_idx);
+  };
 } // namespace champsim
 
 extern champsim::deprecated_clock_cycle current_core_cycle;

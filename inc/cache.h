@@ -20,7 +20,11 @@ extern std::array<O3_CPU*, NUM_CPUS> ooo_cpu;
 class CACHE : public champsim::operable, public MemoryRequestConsumer, public MemoryRequestProducer
 {
 public:
+#if USER_CODES == ENABLE
+  uint32_t cpu = 0;
+#else
   uint32_t cpu;
+#endif
   const std::string NAME;
   const uint32_t NUM_SET, NUM_WAY, WQ_SIZE, RQ_SIZE, PQ_SIZE, MSHR_SIZE;
   const uint32_t HIT_LATENCY, FILL_LATENCY, OFFSET_BITS;
@@ -38,17 +42,17 @@ public:
 
   // queues
   champsim::delay_queue<PACKET> RQ{RQ_SIZE, HIT_LATENCY}, // read queue
-      PQ{PQ_SIZE, HIT_LATENCY},                           // prefetch queue
-      VAPQ{PQ_SIZE, VA_PREFETCH_TRANSLATION_LATENCY},     // virtual address prefetch queue
-      WQ{WQ_SIZE, HIT_LATENCY};                           // write queue
+    PQ{PQ_SIZE, HIT_LATENCY},                             // prefetch queue
+    VAPQ{PQ_SIZE, VA_PREFETCH_TRANSLATION_LATENCY},       // virtual address prefetch queue
+    WQ{WQ_SIZE, HIT_LATENCY};                             // write queue
 
   std::list<PACKET> MSHR; // MSHR
 
   uint64_t sim_access[NUM_CPUS][NUM_TYPES] = {}, sim_hit[NUM_CPUS][NUM_TYPES] = {}, sim_miss[NUM_CPUS][NUM_TYPES] = {}, roi_access[NUM_CPUS][NUM_TYPES] = {},
-           roi_hit[NUM_CPUS][NUM_TYPES] = {}, roi_miss[NUM_CPUS][NUM_TYPES] = {};
+    roi_hit[NUM_CPUS][NUM_TYPES] = {}, roi_miss[NUM_CPUS][NUM_TYPES] = {};
 
   uint64_t RQ_ACCESS = 0, RQ_MERGED = 0, RQ_FULL = 0, RQ_TO_CACHE = 0, PQ_ACCESS = 0, PQ_MERGED = 0, PQ_FULL = 0, PQ_TO_CACHE = 0, WQ_ACCESS = 0, WQ_MERGED = 0,
-           WQ_FULL = 0, WQ_FORWARD = 0, WQ_TO_CACHE = 0;
+    WQ_FULL = 0, WQ_FORWARD = 0, WQ_TO_CACHE = 0;
 
   uint64_t total_miss_latency = 0;
 
@@ -88,7 +92,113 @@ public:
 
   void print_deadlock() override;
 
+#if USER_CODES == ENABLE
+  enum class repl_t { rreplacementDlru }; // Replacement policy type selection
+
+  void repl_rreplacementDlru_initialize();
+  void impl_replacement_initialize()
+  {
+    if (repl_type == repl_t::rreplacementDlru)
+      repl_rreplacementDlru_initialize();
+    else
+    {
+      std::cout << __func__ << ": Replacement policy module not found." << std::endl;
+      throw std::invalid_argument("Replacement policy module not found"); 
+    }
+  }
+
+  uint32_t repl_rreplacementDlru_victim(uint32_t, uint64_t, uint32_t, const BLOCK*, uint64_t, uint64_t, uint32_t);
+  uint32_t impl_replacement_find_victim(uint32_t cpu, uint64_t instr_id, uint32_t set, const BLOCK* current_set, uint64_t ip, uint64_t full_addr, uint32_t type)
+  {
+    if (repl_type == repl_t::rreplacementDlru)
+      return repl_rreplacementDlru_victim(cpu, instr_id, set, current_set, ip, full_addr, type);
+    throw std::invalid_argument("Replacement policy module not found");
+  }
+
+  void repl_rreplacementDlru_update(uint32_t, uint32_t, uint32_t, uint64_t, uint64_t, uint64_t, uint32_t, uint8_t);
+  void impl_replacement_update_state(uint32_t cpu, uint32_t set, uint32_t way, uint64_t full_addr, uint64_t ip, uint64_t victim_addr, uint32_t type,
+                                     uint8_t hit)
+  {
+    if (repl_type == repl_t::rreplacementDlru)
+      return repl_rreplacementDlru_update(cpu, set, way, full_addr, ip, victim_addr, type, hit);
+    throw std::invalid_argument("Replacement policy module not found");
+  }
+
+  void repl_rreplacementDlru_final_stats();
+  void impl_replacement_final_stats()
+  {
+    if (repl_type == repl_t::rreplacementDlru)
+      return repl_rreplacementDlru_final_stats();
+    throw std::invalid_argument("Replacement policy module not found");
+  }
+
+  enum class pref_t { pprefetcherDno, CPU_REDIRECT_pprefetcherDno_instr_ }; // Data prefetcher type selection
+
+  void pref_pprefetcherDno_initialize();
+  void impl_prefetcher_initialize()
+  {
+    if (pref_type == pref_t::CPU_REDIRECT_pprefetcherDno_instr_)
+      ooo_cpu[cpu]->pref_pprefetcherDno_instr_initialize();
+    else if (pref_type == pref_t::pprefetcherDno)
+      pref_pprefetcherDno_initialize();
+    else
+    {
+      std::cout << __func__ << ": Data prefetcher module not found." << std::endl;
+      throw std::invalid_argument("Data prefetcher module not found");
+    }
+  }
+
+  uint32_t pref_pprefetcherDno_cache_operate(uint64_t, uint64_t, uint8_t, uint8_t, uint32_t);
+  uint32_t impl_prefetcher_cache_operate(uint64_t addr, uint64_t ip, uint8_t cache_hit, uint8_t type, uint32_t metadata_in)
+  {
+    if (pref_type == pref_t::pprefetcherDno)
+      return pref_pprefetcherDno_cache_operate(addr, ip, cache_hit, type, metadata_in);
+    if (pref_type == pref_t::CPU_REDIRECT_pprefetcherDno_instr_)
+      return ooo_cpu[cpu]->pref_pprefetcherDno_instr_cache_operate(addr, cache_hit, (type == PREFETCH), metadata_in);
+    throw std::invalid_argument("Data prefetcher module not found");
+  }
+
+  uint32_t pref_pprefetcherDno_cache_fill(uint64_t, uint32_t, uint32_t, uint8_t, uint64_t, uint32_t);
+  uint32_t impl_prefetcher_cache_fill(uint64_t addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_addr, uint32_t metadata_in)
+  {
+    if (pref_type == pref_t::pprefetcherDno)
+      return pref_pprefetcherDno_cache_fill(addr, set, way, prefetch, evicted_addr, metadata_in);
+    if (pref_type == pref_t::CPU_REDIRECT_pprefetcherDno_instr_)
+      return ooo_cpu[cpu]->pref_pprefetcherDno_instr_cache_fill(addr, set, way, prefetch, evicted_addr, metadata_in);
+    throw std::invalid_argument("Data prefetcher module not found");
+  }
+
+  void pref_pprefetcherDno_cycle_operate();
+  void impl_prefetcher_cycle_operate()
+  {
+    if (pref_type == pref_t::pprefetcherDno)
+      return pref_pprefetcherDno_cycle_operate();
+    if (pref_type == pref_t::CPU_REDIRECT_pprefetcherDno_instr_)
+      return ooo_cpu[cpu]->pref_pprefetcherDno_instr_cycle_operate();
+    throw std::invalid_argument("Data prefetcher module not found");
+  }
+
+  void pref_pprefetcherDno_final_stats();
+  void impl_prefetcher_final_stats()
+  {
+    if (pref_type == pref_t::pprefetcherDno)
+      return pref_pprefetcherDno_final_stats();
+    if (pref_type == pref_t::CPU_REDIRECT_pprefetcherDno_instr_)
+      return ooo_cpu[cpu]->pref_pprefetcherDno_instr_final_stats();
+    throw std::invalid_argument("Data prefetcher module not found");
+  }
+
+#if PREFETCHER_USE_NO_AND_NO_INSTR == ENABLE
+
+#endif
+
+#if REPLACEMENT_USE_LRU == ENABLE
+
+#endif
+
+#else
 #include "cache_modules.inc"
+#endif
 
   const repl_t repl_type;
   const pref_t pref_type;
@@ -97,10 +207,10 @@ public:
   CACHE(std::string v1, double freq_scale, unsigned fill_level, uint32_t v2, int v3, uint32_t v5, uint32_t v6, uint32_t v7, uint32_t v8, uint32_t hit_lat,
         uint32_t fill_lat, uint32_t max_read, uint32_t max_write, std::size_t offset_bits, bool pref_load, bool wq_full_addr, bool va_pref,
         unsigned pref_act_mask, MemoryRequestConsumer* ll, pref_t pref, repl_t repl)
-      : champsim::operable(freq_scale), MemoryRequestConsumer(fill_level), MemoryRequestProducer(ll), NAME(v1), NUM_SET(v2), NUM_WAY(v3), WQ_SIZE(v5),
-        RQ_SIZE(v6), PQ_SIZE(v7), MSHR_SIZE(v8), HIT_LATENCY(hit_lat), FILL_LATENCY(fill_lat), OFFSET_BITS(offset_bits), MAX_READ(max_read),
-        MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
-        repl_type(repl), pref_type(pref)
+    : champsim::operable(freq_scale), MemoryRequestConsumer(fill_level), MemoryRequestProducer(ll), NAME(v1), NUM_SET(v2), NUM_WAY(v3), WQ_SIZE(v5),
+    RQ_SIZE(v6), PQ_SIZE(v7), MSHR_SIZE(v8), HIT_LATENCY(hit_lat), FILL_LATENCY(fill_lat), OFFSET_BITS(offset_bits), MAX_READ(max_read),
+    MAX_WRITE(max_write), prefetch_as_load(pref_load), match_offset_bits(wq_full_addr), virtual_prefetch(va_pref), pref_activate_mask(pref_act_mask),
+    repl_type(repl), pref_type(pref)
   {
   }
 };

@@ -12,7 +12,8 @@
 
 class PagingStructureCache
 {
-  struct block_t {
+  struct block_t
+  {
     bool valid = false;
     uint64_t address;
     uint64_t data;

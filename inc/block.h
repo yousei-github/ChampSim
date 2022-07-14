@@ -22,6 +22,9 @@ public:
   uint32_t pf_metadata;
   uint32_t cpu = NUM_CPUS;
 
+#if USER_CODES == ENABLE
+  // address is physical address.
+#endif
   uint64_t address = 0, v_address = 0, data = 0, instr_id = 0, ip = 0, event_cycle = std::numeric_limits<uint64_t>::max(), cycle_enqueued = 0;
 
   std::vector<std::vector<LSQ_ENTRY>::iterator> lq_index_depend_on_me = {}, sq_index_depend_on_me = {};
@@ -32,7 +35,8 @@ public:
 };
 
 template <>
-struct is_valid<PACKET> {
+struct is_valid<PACKET>
+{
   bool operator()(const PACKET& test) { return test.address != 0; }
 };
 
@@ -48,7 +52,8 @@ void packet_dep_merge(LIST& dest, LIST& src)
 }
 
 // load/store queue
-struct LSQ_ENTRY {
+struct LSQ_ENTRY
+{
   uint64_t instr_id = 0, producer_id = std::numeric_limits<uint64_t>::max(), virtual_address = 0, physical_address = 0, ip = 0, event_cycle = 0;
 
   champsim::circular_buffer<ooo_model_instr>::iterator rob_index;
@@ -57,7 +62,8 @@ struct LSQ_ENTRY {
 };
 
 template <>
-struct is_valid<LSQ_ENTRY> {
+struct is_valid<LSQ_ENTRY>
+{
   bool operator()(const LSQ_ENTRY& test) { return test.virtual_address != 0; }
 };
 

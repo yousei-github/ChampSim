@@ -10,7 +10,8 @@ constexpr std::size_t NUM_INSTR_SOURCES = 4;
 
 class LSQ_ENTRY;
 
-struct input_instr {
+struct input_instr
+{
   // instruction pointer or PC (Program Counter)
   unsigned long long ip = 0;
 
@@ -25,7 +26,8 @@ struct input_instr {
   unsigned long long source_memory[NUM_INSTR_SOURCES] = {};           // input memory
 };
 
-struct cloudsuite_instr {
+struct cloudsuite_instr
+{
   // instruction pointer or PC (Program Counter)
   unsigned long long ip = 0;
 

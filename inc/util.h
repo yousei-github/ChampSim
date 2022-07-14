@@ -2,22 +2,37 @@
 #define UTIL_H
 
 #include <cstdint>
+#include "Configuration.h" // user file
 
 constexpr unsigned lg2(uint64_t n) { return n < 2 ? 0 : 1 + lg2(n / 2); }
 
+#if USER_CODES == ENABLE
+/** @note Calulate the bit mask from begin to end
+ *  @example
+ *  if begin = 3 and end = 1 are input, then (00...00110)(64 bit) is return.
+ */
+#endif
 constexpr uint64_t bitmask(std::size_t begin, std::size_t end = 0) { return ((1ull << (begin - end)) - 1) << end; }
 
+#if USER_CODES == ENABLE
+/** @note Combine two data's bits
+ *  @example
+ *  if upper = 0xb(1011), lower = 0x1(0001) and bits = 2, then (1001)(64 bit) is return.
+ */
+#endif
 constexpr uint64_t splice_bits(uint64_t upper, uint64_t lower, std::size_t bits) { return (upper & ~bitmask(bits)) | (lower & bitmask(bits)); }
 
 template <typename T>
-struct is_valid {
+struct is_valid
+{
   using argument_type = T;
   is_valid() {}
   bool operator()(const argument_type& test) { return test.valid; }
 };
 
 template <typename T>
-struct eq_addr {
+struct eq_addr
+{
   using argument_type = T;
   const decltype(argument_type::address) val;
   const std::size_t shamt = 0;
@@ -33,7 +48,8 @@ struct eq_addr {
 };
 
 template <typename T, typename BIN, typename U = T, typename UN_T = is_valid<T>, typename UN_U = is_valid<U>>
-struct invalid_is_minimal {
+struct invalid_is_minimal
+{
   bool operator()(const T& lhs, const U& rhs)
   {
     UN_T lhs_unary;
@@ -45,7 +61,8 @@ struct invalid_is_minimal {
 };
 
 template <typename T, typename BIN, typename U = T, typename UN_T = is_valid<T>, typename UN_U = is_valid<U>>
-struct invalid_is_maximal {
+struct invalid_is_maximal
+{
   bool operator()(const T& lhs, const U& rhs)
   {
     UN_T lhs_unary;
@@ -57,16 +74,19 @@ struct invalid_is_maximal {
 };
 
 template <typename T, typename U = T>
-struct cmp_event_cycle {
+struct cmp_event_cycle
+{
   bool operator()(const T& lhs, const U& rhs) { return lhs.event_cycle < rhs.event_cycle; }
 };
 
 template <typename T>
-struct min_event_cycle : invalid_is_maximal<T, cmp_event_cycle<T>> {
+struct min_event_cycle : invalid_is_maximal<T, cmp_event_cycle<T>>
+{
 };
 
 template <typename T, typename U = T>
-struct cmp_lru {
+struct cmp_lru
+{
   bool operator()(const T& lhs, const U& rhs) { return lhs.lru < rhs.lru; }
 };
 
@@ -82,7 +102,8 @@ struct cmp_lru {
  * The MRU element can be found using std::min_element instead.
  */
 template <typename T, typename U = T>
-struct lru_comparator : invalid_is_maximal<T, cmp_lru<T, U>, U> {
+struct lru_comparator : invalid_is_maximal<T, cmp_lru<T, U>, U>
+{
   using first_argument_type = T;
   using second_argument_type = U;
 };
@@ -96,7 +117,8 @@ struct lru_comparator : invalid_is_maximal<T, cmp_lru<T, U>, U> {
  * lru_updater<BLOCK>(hit_element));
  */
 template <typename T>
-struct lru_updater {
+struct lru_updater
+{
   const decltype(T::lru) val;
   explicit lru_updater(decltype(T::lru) val) : val(val) {}
 
@@ -115,7 +137,8 @@ struct lru_updater {
 };
 
 template <typename T, typename U = T>
-struct ord_event_cycle {
+struct ord_event_cycle
+{
   using first_argument_type = T;
   using second_argument_type = U;
   bool operator()(const first_argument_type& lhs, const second_argument_type& rhs)
