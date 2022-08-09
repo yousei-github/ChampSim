@@ -17,7 +17,8 @@
 #define BASIC_BTB_RAS_SIZE 64
 #define BASIC_BTB_CALL_INSTR_SIZE_TRACKERS 1024
 
-struct BASIC_BTB_ENTRY {
+struct BASIC_BTB_ENTRY
+{
   uint64_t ip_tag;
   uint64_t target;
   uint8_t always_taken;
@@ -44,7 +45,8 @@ uint64_t basic_btb_call_instr_sizes[NUM_CPUS][BASIC_BTB_CALL_INSTR_SIZE_TRACKERS
 
 uint64_t basic_btb_abs_addr_dist(uint64_t addr1, uint64_t addr2)
 {
-  if (addr1 > addr2) {
+  if (addr1 > addr2)
+  {
     return addr1 - addr2;
   }
 
@@ -56,8 +58,10 @@ uint64_t basic_btb_set_index(uint64_t ip) { return ((ip >> 2) & (BASIC_BTB_SETS 
 BASIC_BTB_ENTRY* basic_btb_find_entry(uint8_t cpu, uint64_t ip)
 {
   uint64_t set = basic_btb_set_index(ip);
-  for (uint32_t i = 0; i < BASIC_BTB_WAYS; i++) {
-    if (basic_btb[cpu][set][i].ip_tag == ip) {
+  for (uint32_t i = 0; i < BASIC_BTB_WAYS; i++)
+  {
+    if (basic_btb[cpu][set][i].ip_tag == ip)
+    {
       return &(basic_btb[cpu][set][i]);
     }
   }
@@ -69,8 +73,10 @@ BASIC_BTB_ENTRY* basic_btb_get_lru_entry(uint8_t cpu, uint64_t set)
 {
   uint32_t lru_way = 0;
   uint64_t lru_value = basic_btb[cpu][set][lru_way].lru;
-  for (uint32_t i = 0; i < BASIC_BTB_WAYS; i++) {
-    if (basic_btb[cpu][set][i].lru < lru_value) {
+  for (uint32_t i = 0; i < BASIC_BTB_WAYS; i++)
+  {
+    if (basic_btb[cpu][set][i].lru < lru_value)
+    {
       lru_way = i;
       lru_value = basic_btb[cpu][set][lru_way].lru;
     }
@@ -94,7 +100,8 @@ uint64_t basic_btb_indirect_hash(uint8_t cpu, uint64_t ip)
 void push_basic_btb_ras(uint8_t cpu, uint64_t ip)
 {
   basic_btb_ras_index[cpu]++;
-  if (basic_btb_ras_index[cpu] == BASIC_BTB_RAS_SIZE) {
+  if (basic_btb_ras_index[cpu] == BASIC_BTB_RAS_SIZE)
+  {
     basic_btb_ras_index[cpu] = 0;
   }
 
@@ -109,7 +116,8 @@ uint64_t pop_basic_btb_ras(uint8_t cpu)
   basic_btb_ras[cpu][basic_btb_ras_index[cpu]] = 0;
 
   basic_btb_ras_index[cpu]--;
-  if (basic_btb_ras_index[cpu] == -1) {
+  if (basic_btb_ras_index[cpu] == -1)
+  {
     basic_btb_ras_index[cpu] += BASIC_BTB_RAS_SIZE;
   }
 
@@ -127,11 +135,17 @@ uint64_t basic_btb_get_call_size(uint8_t cpu, uint64_t ip)
 
 void O3_CPU::btb_bbtbDbasic_btb_initialize()
 {
+#if PRINT_STATISTICS_INTO_FILE == ENABLE
+  fprintf(outputchampsimstatistics.trace_file, "Basic BTB sets: %d ways: %d indirect buffer size: %d RAS size: %d\n", BASIC_BTB_SETS, BASIC_BTB_WAYS, BASIC_BTB_INDIRECT_SIZE, BASIC_BTB_RAS_SIZE);
+#else
   std::cout << "Basic BTB sets: " << BASIC_BTB_SETS << " ways: " << BASIC_BTB_WAYS << " indirect buffer size: " << BASIC_BTB_INDIRECT_SIZE
-            << " RAS size: " << BASIC_BTB_RAS_SIZE << std::endl;
+    << " RAS size: " << BASIC_BTB_RAS_SIZE << std::endl;
+#endif
 
-  for (uint32_t i = 0; i < BASIC_BTB_SETS; i++) {
-    for (uint32_t j = 0; j < BASIC_BTB_WAYS; j++) {
+  for (uint32_t i = 0; i < BASIC_BTB_SETS; i++)
+  {
+    for (uint32_t j = 0; j < BASIC_BTB_WAYS; j++)
+    {
       basic_btb[cpu][i][j].ip_tag = 0;
       basic_btb[cpu][i][j].target = 0;
       basic_btb[cpu][i][j].always_taken = 0;
@@ -140,16 +154,19 @@ void O3_CPU::btb_bbtbDbasic_btb_initialize()
   }
   basic_btb_lru_counter[cpu] = 0;
 
-  for (uint32_t i = 0; i < BASIC_BTB_INDIRECT_SIZE; i++) {
+  for (uint32_t i = 0; i < BASIC_BTB_INDIRECT_SIZE; i++)
+  {
     basic_btb_indirect[cpu][i] = 0;
   }
   basic_btb_conditional_history[cpu] = 0;
 
-  for (uint32_t i = 0; i < BASIC_BTB_RAS_SIZE; i++) {
+  for (uint32_t i = 0; i < BASIC_BTB_RAS_SIZE; i++)
+  {
     basic_btb_ras[cpu][i] = 0;
   }
   basic_btb_ras_index[cpu] = 0;
-  for (uint32_t i = 0; i < BASIC_BTB_CALL_INSTR_SIZE_TRACKERS; i++) {
+  for (uint32_t i = 0; i < BASIC_BTB_CALL_INSTR_SIZE_TRACKERS; i++)
+  {
     basic_btb_call_instr_sizes[cpu][i] = 4;
   }
 }
@@ -157,29 +174,37 @@ void O3_CPU::btb_bbtbDbasic_btb_initialize()
 std::pair<uint64_t, uint8_t> O3_CPU::btb_bbtbDbasic_btb_predict(uint64_t ip, uint8_t branch_type)
 {
   uint8_t always_taken = false;
-  if (branch_type != BRANCH_CONDITIONAL) {
+  if (branch_type != BRANCH_CONDITIONAL)
+  {
     always_taken = true;
   }
 
-  if ((branch_type == BRANCH_DIRECT_CALL) || (branch_type == BRANCH_INDIRECT_CALL)) {
+  if ((branch_type == BRANCH_DIRECT_CALL) || (branch_type == BRANCH_INDIRECT_CALL))
+  {
     // add something to the RAS
     push_basic_btb_ras(cpu, ip);
   }
 
-  if (branch_type == BRANCH_RETURN) {
+  if (branch_type == BRANCH_RETURN)
+  {
     // peek at the top of the RAS
     uint64_t target = peek_basic_btb_ras(cpu);
     // and adjust for the size of the call instr
     target += basic_btb_get_call_size(cpu, target);
 
     return std::make_pair(target, always_taken);
-  } else if ((branch_type == BRANCH_INDIRECT) || (branch_type == BRANCH_INDIRECT_CALL)) {
+  }
+  else if ((branch_type == BRANCH_INDIRECT) || (branch_type == BRANCH_INDIRECT_CALL))
+  {
     return std::make_pair(basic_btb_indirect[cpu][basic_btb_indirect_hash(cpu, ip)], always_taken);
-  } else {
+  }
+  else
+  {
     // use BTB for all other branches + direct calls
     auto btb_entry = basic_btb_find_entry(cpu, ip);
 
-    if (btb_entry == NULL) {
+    if (btb_entry == NULL)
+    {
       // no prediction for this IP
       always_taken = true;
       return std::make_pair(0, always_taken);
@@ -197,31 +222,40 @@ std::pair<uint64_t, uint8_t> O3_CPU::btb_bbtbDbasic_btb_predict(uint64_t ip, uin
 void O3_CPU::btb_bbtbDbasic_btb_update(uint64_t ip, uint64_t branch_target, uint8_t taken, uint8_t branch_type)
 {
   // updates for indirect branches
-  if ((branch_type == BRANCH_INDIRECT) || (branch_type == BRANCH_INDIRECT_CALL)) {
+  if ((branch_type == BRANCH_INDIRECT) || (branch_type == BRANCH_INDIRECT_CALL))
+  {
     basic_btb_indirect[cpu][basic_btb_indirect_hash(cpu, ip)] = branch_target;
   }
-  if (branch_type == BRANCH_CONDITIONAL) {
+  if (branch_type == BRANCH_CONDITIONAL)
+  {
     basic_btb_conditional_history[cpu] <<= 1;
-    if (taken) {
+    if (taken)
+    {
       basic_btb_conditional_history[cpu] |= 1;
     }
   }
 
-  if (branch_type == BRANCH_RETURN) {
+  if (branch_type == BRANCH_RETURN)
+  {
     // recalibrate call-return offset
     // if our return prediction got us into the right ball park, but not the
     // exactly correct byte target, then adjust our call instr size tracker
     uint64_t call_ip = pop_basic_btb_ras(cpu);
     uint64_t estimated_call_instr_size = basic_btb_abs_addr_dist(call_ip, branch_target);
-    if (estimated_call_instr_size <= 10) {
+    if (estimated_call_instr_size <= 10)
+    {
       basic_btb_call_instr_sizes[cpu][basic_btb_call_size_tracker_hash(call_ip)] = estimated_call_instr_size;
     }
-  } else if ((branch_type != BRANCH_INDIRECT) && (branch_type != BRANCH_INDIRECT_CALL)) {
+  }
+  else if ((branch_type != BRANCH_INDIRECT) && (branch_type != BRANCH_INDIRECT_CALL))
+  {
     // use BTB
     auto btb_entry = basic_btb_find_entry(cpu, ip);
 
-    if (btb_entry == NULL) {
-      if ((branch_target != 0) && taken) {
+    if (btb_entry == NULL)
+    {
+      if ((branch_target != 0) && taken)
+      {
         // no prediction for this entry so far, so allocate one
         uint64_t set = basic_btb_set_index(ip);
         auto repl_entry = basic_btb_get_lru_entry(cpu, set);
@@ -231,10 +265,13 @@ void O3_CPU::btb_bbtbDbasic_btb_update(uint64_t ip, uint64_t branch_target, uint
         repl_entry->always_taken = 1;
         basic_btb_update_lru(cpu, repl_entry);
       }
-    } else {
+    }
+    else
+    {
       // update an existing entry
       btb_entry->target = branch_target;
-      if (!taken) {
+      if (!taken)
+      {
         btb_entry->always_taken = 0;
       }
     }
@@ -251,7 +288,8 @@ void O3_CPU::btb_bbtbDbasic_btb_update(uint64_t ip, uint64_t branch_target, uint
 #define BASIC_BTB_RAS_SIZE 64
 #define BASIC_BTB_CALL_INSTR_SIZE_TRACKERS 1024
 
-struct BASIC_BTB_ENTRY {
+struct BASIC_BTB_ENTRY
+{
   uint64_t ip_tag;
   uint64_t target;
   uint8_t always_taken;
@@ -278,7 +316,8 @@ uint64_t basic_btb_call_instr_sizes[NUM_CPUS][BASIC_BTB_CALL_INSTR_SIZE_TRACKERS
 
 uint64_t basic_btb_abs_addr_dist(uint64_t addr1, uint64_t addr2)
 {
-  if (addr1 > addr2) {
+  if (addr1 > addr2)
+  {
     return addr1 - addr2;
   }
 
@@ -290,8 +329,10 @@ uint64_t basic_btb_set_index(uint64_t ip) { return ((ip >> 2) & (BASIC_BTB_SETS 
 BASIC_BTB_ENTRY* basic_btb_find_entry(uint8_t cpu, uint64_t ip)
 {
   uint64_t set = basic_btb_set_index(ip);
-  for (uint32_t i = 0; i < BASIC_BTB_WAYS; i++) {
-    if (basic_btb[cpu][set][i].ip_tag == ip) {
+  for (uint32_t i = 0; i < BASIC_BTB_WAYS; i++)
+  {
+    if (basic_btb[cpu][set][i].ip_tag == ip)
+    {
       return &(basic_btb[cpu][set][i]);
     }
   }
@@ -303,8 +344,10 @@ BASIC_BTB_ENTRY* basic_btb_get_lru_entry(uint8_t cpu, uint64_t set)
 {
   uint32_t lru_way = 0;
   uint64_t lru_value = basic_btb[cpu][set][lru_way].lru;
-  for (uint32_t i = 0; i < BASIC_BTB_WAYS; i++) {
-    if (basic_btb[cpu][set][i].lru < lru_value) {
+  for (uint32_t i = 0; i < BASIC_BTB_WAYS; i++)
+  {
+    if (basic_btb[cpu][set][i].lru < lru_value)
+    {
       lru_way = i;
       lru_value = basic_btb[cpu][set][lru_way].lru;
     }
@@ -328,7 +371,8 @@ uint64_t basic_btb_indirect_hash(uint8_t cpu, uint64_t ip)
 void push_basic_btb_ras(uint8_t cpu, uint64_t ip)
 {
   basic_btb_ras_index[cpu]++;
-  if (basic_btb_ras_index[cpu] == BASIC_BTB_RAS_SIZE) {
+  if (basic_btb_ras_index[cpu] == BASIC_BTB_RAS_SIZE)
+  {
     basic_btb_ras_index[cpu] = 0;
   }
 
@@ -343,7 +387,8 @@ uint64_t pop_basic_btb_ras(uint8_t cpu)
   basic_btb_ras[cpu][basic_btb_ras_index[cpu]] = 0;
 
   basic_btb_ras_index[cpu]--;
-  if (basic_btb_ras_index[cpu] == -1) {
+  if (basic_btb_ras_index[cpu] == -1)
+  {
     basic_btb_ras_index[cpu] += BASIC_BTB_RAS_SIZE;
   }
 
@@ -362,10 +407,12 @@ uint64_t basic_btb_get_call_size(uint8_t cpu, uint64_t ip)
 void O3_CPU::initialize_btb()
 {
   std::cout << "Basic BTB sets: " << BASIC_BTB_SETS << " ways: " << BASIC_BTB_WAYS << " indirect buffer size: " << BASIC_BTB_INDIRECT_SIZE
-            << " RAS size: " << BASIC_BTB_RAS_SIZE << std::endl;
+    << " RAS size: " << BASIC_BTB_RAS_SIZE << std::endl;
 
-  for (uint32_t i = 0; i < BASIC_BTB_SETS; i++) {
-    for (uint32_t j = 0; j < BASIC_BTB_WAYS; j++) {
+  for (uint32_t i = 0; i < BASIC_BTB_SETS; i++)
+  {
+    for (uint32_t j = 0; j < BASIC_BTB_WAYS; j++)
+    {
       basic_btb[cpu][i][j].ip_tag = 0;
       basic_btb[cpu][i][j].target = 0;
       basic_btb[cpu][i][j].always_taken = 0;
@@ -374,16 +421,19 @@ void O3_CPU::initialize_btb()
   }
   basic_btb_lru_counter[cpu] = 0;
 
-  for (uint32_t i = 0; i < BASIC_BTB_INDIRECT_SIZE; i++) {
+  for (uint32_t i = 0; i < BASIC_BTB_INDIRECT_SIZE; i++)
+  {
     basic_btb_indirect[cpu][i] = 0;
   }
   basic_btb_conditional_history[cpu] = 0;
 
-  for (uint32_t i = 0; i < BASIC_BTB_RAS_SIZE; i++) {
+  for (uint32_t i = 0; i < BASIC_BTB_RAS_SIZE; i++)
+  {
     basic_btb_ras[cpu][i] = 0;
   }
   basic_btb_ras_index[cpu] = 0;
-  for (uint32_t i = 0; i < BASIC_BTB_CALL_INSTR_SIZE_TRACKERS; i++) {
+  for (uint32_t i = 0; i < BASIC_BTB_CALL_INSTR_SIZE_TRACKERS; i++)
+  {
     basic_btb_call_instr_sizes[cpu][i] = 4;
   }
 }
@@ -391,29 +441,37 @@ void O3_CPU::initialize_btb()
 std::pair<uint64_t, uint8_t> O3_CPU::btb_prediction(uint64_t ip, uint8_t branch_type)
 {
   uint8_t always_taken = false;
-  if (branch_type != BRANCH_CONDITIONAL) {
+  if (branch_type != BRANCH_CONDITIONAL)
+  {
     always_taken = true;
   }
 
-  if ((branch_type == BRANCH_DIRECT_CALL) || (branch_type == BRANCH_INDIRECT_CALL)) {
+  if ((branch_type == BRANCH_DIRECT_CALL) || (branch_type == BRANCH_INDIRECT_CALL))
+  {
     // add something to the RAS
     push_basic_btb_ras(cpu, ip);
   }
 
-  if (branch_type == BRANCH_RETURN) {
+  if (branch_type == BRANCH_RETURN)
+  {
     // peek at the top of the RAS
     uint64_t target = peek_basic_btb_ras(cpu);
     // and adjust for the size of the call instr
     target += basic_btb_get_call_size(cpu, target);
 
     return std::make_pair(target, always_taken);
-  } else if ((branch_type == BRANCH_INDIRECT) || (branch_type == BRANCH_INDIRECT_CALL)) {
+  }
+  else if ((branch_type == BRANCH_INDIRECT) || (branch_type == BRANCH_INDIRECT_CALL))
+  {
     return std::make_pair(basic_btb_indirect[cpu][basic_btb_indirect_hash(cpu, ip)], always_taken);
-  } else {
+  }
+  else
+  {
     // use BTB for all other branches + direct calls
     auto btb_entry = basic_btb_find_entry(cpu, ip);
 
-    if (btb_entry == NULL) {
+    if (btb_entry == NULL)
+    {
       // no prediction for this IP
       always_taken = true;
       return std::make_pair(0, always_taken);
@@ -431,31 +489,40 @@ std::pair<uint64_t, uint8_t> O3_CPU::btb_prediction(uint64_t ip, uint8_t branch_
 void O3_CPU::update_btb(uint64_t ip, uint64_t branch_target, uint8_t taken, uint8_t branch_type)
 {
   // updates for indirect branches
-  if ((branch_type == BRANCH_INDIRECT) || (branch_type == BRANCH_INDIRECT_CALL)) {
+  if ((branch_type == BRANCH_INDIRECT) || (branch_type == BRANCH_INDIRECT_CALL))
+  {
     basic_btb_indirect[cpu][basic_btb_indirect_hash(cpu, ip)] = branch_target;
   }
-  if (branch_type == BRANCH_CONDITIONAL) {
+  if (branch_type == BRANCH_CONDITIONAL)
+  {
     basic_btb_conditional_history[cpu] <<= 1;
-    if (taken) {
+    if (taken)
+    {
       basic_btb_conditional_history[cpu] |= 1;
     }
   }
 
-  if (branch_type == BRANCH_RETURN) {
+  if (branch_type == BRANCH_RETURN)
+  {
     // recalibrate call-return offset
     // if our return prediction got us into the right ball park, but not the
     // exactly correct byte target, then adjust our call instr size tracker
     uint64_t call_ip = pop_basic_btb_ras(cpu);
     uint64_t estimated_call_instr_size = basic_btb_abs_addr_dist(call_ip, branch_target);
-    if (estimated_call_instr_size <= 10) {
+    if (estimated_call_instr_size <= 10)
+    {
       basic_btb_call_instr_sizes[cpu][basic_btb_call_size_tracker_hash(call_ip)] = estimated_call_instr_size;
     }
-  } else if ((branch_type != BRANCH_INDIRECT) && (branch_type != BRANCH_INDIRECT_CALL)) {
+  }
+  else if ((branch_type != BRANCH_INDIRECT) && (branch_type != BRANCH_INDIRECT_CALL))
+  {
     // use BTB
     auto btb_entry = basic_btb_find_entry(cpu, ip);
 
-    if (btb_entry == NULL) {
-      if ((branch_target != 0) && taken) {
+    if (btb_entry == NULL)
+    {
+      if ((branch_target != 0) && taken)
+      {
         // no prediction for this entry so far, so allocate one
         uint64_t set = basic_btb_set_index(ip);
         auto repl_entry = basic_btb_get_lru_entry(cpu, set);
@@ -465,10 +532,13 @@ void O3_CPU::update_btb(uint64_t ip, uint64_t branch_target, uint8_t taken, uint
         repl_entry->always_taken = 1;
         basic_btb_update_lru(cpu, repl_entry);
       }
-    } else {
+    }
+    else
+    {
       // update an existing entry
       btb_entry->target = branch_target;
-      if (!taken) {
+      if (!taken)
+      {
         btb_entry->always_taken = 0;
       }
     }

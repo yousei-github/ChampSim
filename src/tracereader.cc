@@ -6,7 +6,7 @@
 #include <iostream>
 #include <string>
 
-#include "Configuration.h" // user file
+#include "ProjectConfiguration.h" // user file
 
 tracereader::tracereader(uint8_t cpu, std::string _ts) : cpu(cpu), trace_string(_ts)
 {

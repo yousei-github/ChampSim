@@ -9,7 +9,7 @@
 #include "memory_class.h"
 #include "operable.h"
 #include "util.h"
-#include "Configuration.h" // user file
+#include "ProjectConfiguration.h" // user file
 
 // these values control when to send out a burst of writes
 constexpr std::size_t DRAM_WRITE_HIGH_WM = ((DRAM_WQ_SIZE * 7) >> 3);         // 7/8th
@@ -25,18 +25,21 @@ namespace detail
   }
 } // namespace detail
 
+#if USER_CODES == ENABLE
+
 struct BANK_REQUEST
 {
   bool valid = false, row_buffer_hit = false;
 
+  // the row address will be stored here when the row is open.
   std::size_t open_row = std::numeric_limits<uint32_t>::max();
 
   uint64_t event_cycle = 0;
 
+  // store the related PACKET to access
   std::vector<PACKET>::iterator pkt;
 };
 
-#if USER_CODES == ENABLE
 
 // DDR and HBM share a flat address space and the address space starts at HBM.
 typedef enum
@@ -159,6 +162,17 @@ private:
 };
 
 #else
+struct BANK_REQUEST
+{
+  bool valid = false, row_buffer_hit = false;
+
+  std::size_t open_row = std::numeric_limits<uint32_t>::max();
+
+  uint64_t event_cycle = 0;
+
+  std::vector<PACKET>::iterator pkt;
+};
+
 struct DRAM_CHANNEL
 {
   std::vector<PACKET> WQ{DRAM_WQ_SIZE};

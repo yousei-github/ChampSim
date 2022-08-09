@@ -17,6 +17,8 @@ struct next_schedule : public invalid_is_maximal<PACKET, min_event_cycle<PACKET>
 };
 
 #if USER_CODES == ENABLE
+
+#if MEMORY_USE_HYBRID == ENABLE
 void MEMORY_CONTROLLER::operate()
 {
   for (auto& channel : hbm_channels)
@@ -29,6 +31,16 @@ void MEMORY_CONTROLLER::operate()
     operate_ddr(channel);
   }
 }
+#else
+void MEMORY_CONTROLLER::operate()
+{
+  for (auto& channel : ddr_channels)
+  {
+    operate_ddr(channel);
+  }
+}
+#endif
+
 
 int MEMORY_CONTROLLER::add_rq(PACKET* packet)
 {
@@ -84,6 +96,9 @@ int MEMORY_CONTROLLER::add_rq(PACKET* packet)
     // Enqueue
     *rq_it = *packet;
     rq_it->event_cycle = current_cycle;
+
+    // output memory trace.
+    output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'R');
   }
   break;
   case DDR:
@@ -126,6 +141,9 @@ int MEMORY_CONTROLLER::add_rq(PACKET* packet)
     // Enqueue
     *rq_it = *packet;
     rq_it->event_cycle = current_cycle;
+
+    // output memory trace.
+    output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'R');
   }
   break;
   }
@@ -162,6 +180,9 @@ int MEMORY_CONTROLLER::add_wq(PACKET* packet)
     // Enqueue
     *wq_it = *packet;
     wq_it->event_cycle = current_cycle;
+
+    // output memory trace.
+    output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'W');
   }
   break;
   case DDR:
@@ -184,6 +205,9 @@ int MEMORY_CONTROLLER::add_wq(PACKET* packet)
     // Enqueue
     *wq_it = *packet;
     wq_it->event_cycle = current_cycle;
+
+    // output memory trace.
+    output_memory_trace_hexadecimal(outputmemorytrace_one, packet->address, 'W');
   }
   break;
   }
@@ -380,6 +404,7 @@ uint32_t MEMORY_CONTROLLER::get_size(uint8_t queue_type, uint64_t address)
   return 0;
 }
 
+#if MEMORY_USE_HYBRID == ENABLE
 MemoryType MEMORY_CONTROLLER::get_memory_type(uint64_t address)
 {
   if (address < HBM_CAPACITY)
@@ -396,6 +421,21 @@ MemoryType MEMORY_CONTROLLER::get_memory_type(uint64_t address)
     throw std::invalid_argument("Address mapping has error");
   }
 }
+#else
+MemoryType MEMORY_CONTROLLER::get_memory_type(uint64_t address)
+{
+  if (address < DDR_CAPACITY)
+  {
+    return DDR;
+  }
+  else
+  {
+    std::cout << __func__ << ": Address mapping has error." << std::endl;
+    throw std::invalid_argument("Address mapping has error");
+  }
+}
+#endif
+
 
 void MEMORY_CONTROLLER::operate_hbm(HBM_CHANNEL& channel)
 {
@@ -627,7 +667,7 @@ void MEMORY_CONTROLLER::operate_ddr(DDR_CHANNEL& channel)
 
 float MEMORY_CONTROLLER::get_average_memory_access_time()
 {
-  return statistics.memory_request_total_service_time / statistics.total_issued_memory_request_number;
+  return (float)statistics.memory_request_total_service_time / statistics.total_issued_memory_request_number;
 }
 
 #else
@@ -877,6 +917,6 @@ uint32_t MEMORY_CONTROLLER::get_size(uint8_t queue_type, uint64_t address)
     return get_size(1, address);
 
   return 0;
-  }
+}
 #endif
 

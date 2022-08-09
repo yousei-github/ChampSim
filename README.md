@@ -4,7 +4,7 @@
 </p>
 
 # Hybrid Memory Systems
-This branch is based on the master branch of ChampSim and is modified to simulate hybrid memory systems and have a comfortable coding experience in Visual Studio Code. The parameters about hybrid memory systems is in the `champsim_constants.h` file.
+This branch is based on the master branch of ChampSim and is modified to simulate hybrid memory systems. The parameters about hybrid memory systems are defined in the `champsim_constants.h` file. To enable the functionality of hybrid memory systems, set the preprocessor `MEMORY_USE_HYBRID` to `ENABLE` in the `ProjectConfiguration.h` file.
 
 # Download DPC-3 trace
 
@@ -17,15 +17,13 @@ $ ./download_dpc3_traces.sh
 
 # Build and debug
 
-Before starting to build or debug this project, you might need to be familiar with [the official tutorial](https://code.visualstudio.com/docs/cpp/config-linux).
+Before starting to build or debug this project, you might need to be familiar with [the visual studio code tutorial](https://code.visualstudio.com/docs/cpp/config-linux).
 
 ## Build
 Build methods are explained below.
 
 ### 1. Visual Studio Code-based method.
-- Follow the [the official tutorial](https://code.visualstudio.com/docs/cpp/config-linux) to create the `tasks.json` file in the `.vscode` directory.
-- Replace the contents of `tasks.json` file in the `.vscode` directory with the file having same name in `vscode` directory.
-- You may need to modify the above contents on your own, such as the compiler's path.
+- You may need to modify the compiler's path in the `tasks.json` file in the `.vscode` directory.
 - Click `Run Build Task` in the `Terminal` tab.
 
 ### 2. Command line-based method.
@@ -40,9 +38,7 @@ champsim_directory/branch/bimodal/*.c* champsim_directory/prefetcher/no/*.c*" ch
 Debug methods are explained below.
 
 ### Visual Studio Code-based method.
-- Follow the [the official tutorial](https://code.visualstudio.com/docs/cpp/config-linux) to create the `launch.json` file in the `.vscode` directory.
-- Replace the contents of `launch.json` file in the `.vscode` directory with the file having same name in `vscode` directory.
-- You may need to modify the above contents on your own, such as the debugger's path.
+- You may need to modify the debugger's path in the `launch.json` file in the `.vscode` directory.
 - Click `Start Debugging` in the `Run` tab.
 
 ### 2. Command line-based method.

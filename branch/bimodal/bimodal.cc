@@ -13,7 +13,12 @@ std::map<O3_CPU*, std::array<int, BIMODAL_TABLE_SIZE>> bimodal_table;
 
 void O3_CPU::bpred_bbranchDbimodal_initialize()
 {
+#if PRINT_STATISTICS_INTO_FILE == ENABLE
+  fprintf(outputchampsimstatistics.trace_file, "CPU %d Bimodal branch predictor\n", cpu);
+#else
   std::cout << "CPU " << cpu << " Bimodal branch predictor" << std::endl;
+#endif
+  
   bimodal_table[this] = {};
 }
 

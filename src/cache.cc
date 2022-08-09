@@ -467,7 +467,7 @@ int CACHE::add_rq(PACKET* packet)
 
     DP(if (warmup_complete[packet->cpu]) std::cout << " MERGED_RQ" << std::endl;)
 
-      packet_dep_merge(found_rq->lq_index_depend_on_me, packet->lq_index_depend_on_me);
+    packet_dep_merge(found_rq->lq_index_depend_on_me, packet->lq_index_depend_on_me);
     packet_dep_merge(found_rq->sq_index_depend_on_me, packet->sq_index_depend_on_me);
     packet_dep_merge(found_rq->instr_depend_on_me, packet->instr_depend_on_me);
     packet_dep_merge(found_rq->to_return, packet->to_return);

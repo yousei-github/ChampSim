@@ -2,7 +2,7 @@
 #define OPERABLE_H
 
 #include <iostream>
-#include "Configuration.h" // user file
+#include "ProjectConfiguration.h" // user file
 
 namespace champsim
 {

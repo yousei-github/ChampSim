@@ -2,7 +2,7 @@
 #define UTIL_H
 
 #include <cstdint>
-#include "Configuration.h" // user file
+#include "ProjectConfiguration.h" // user file
 
 constexpr unsigned lg2(uint64_t n) { return n < 2 ? 0 : 1 + lg2(n / 2); }
 

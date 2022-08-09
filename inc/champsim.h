@@ -6,7 +6,7 @@
 #include <exception>
 #include <iostream>
 
-#include "Configuration.h" // user file
+#include "ProjectConfiguration.h" // user file
 
 #include "champsim_constants.h"
 

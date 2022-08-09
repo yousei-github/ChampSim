@@ -6,9 +6,11 @@
 #ifndef CHAMPSIM_CONSTANTS_H
 #define CHAMPSIM_CONSTANTS_H
 #include "util.h"
-#include "Configuration.h" // user file
+#include "ProjectConfiguration.h" // user file
 
 #if USER_CODES == ENABLE
+#define CPU_FREQUENCY (4000ul)  // MHz
+
  // the unit of BLOCK_SIZE is byte
 #endif
 #define BLOCK_SIZE 64ul
@@ -37,27 +39,21 @@
  *  to the DDR configuration. This means all chips in the same rank will operate together when transferring data, so no need
  *  to set chip address field in physical address.
  *
- *  The unit of DRAM_IO_FREQ is MHz. Here if DRAM_IO_FREQ is 3200ul, the DRAM is DDR5 (2400-3600 MHz).
+ *  The unit of DRAM_IO_FREQ is MHz. Here if DRAM_IO_FREQ is 3200ul, the DRAM is DDR4 (800-1600 MHz). DDR5's I/O clock rate ranges
+ *  between 2400-3600 MHz, so its data rate can be 4800-7200 MT/s.
  */
 #define DRAM_IO_FREQ (3200ul)
+#define DRAM_IO_DATA_RATE (3200ul)  // MT/s
+
 #define DDR_CHANNELS (1ul)
 #define DDR_RANKS (1ul)
 #define DDR_BANKS (8ul)
-#define DDR_ROWS (32768ul)
-#define DDR_COLUMNS (64ul)
-#else
-#define DRAM_IO_FREQ 3200ul
-#define DRAM_CHANNELS 1ul
-#define DRAM_RANKS 1ul
-#define DRAM_BANKS 8ul
-#define DRAM_ROWS 65536ul
-#define DRAM_COLUMNS 128ul
-
-#endif
-
-#if USER_CODES == ENABLE
-#define DDR_CAPACITY (768*MB)  // Note if you modify its capacity, its corresponding parameters (e.g., channel, bank, ...) need to be modified too.
+#define DDR_ROWS (65536ul)
+#define DDR_COLUMNS (128ul)
+// Note if you modify its capacity, its corresponding parameters (e.g., channel, bank, ...) need to be modified too.
+//#define DDR_CAPACITY (768*MB)  
 //#define DDR_CAPACITY (1*GB) 
+#define DDR_CAPACITY (4*GB) 
 
  /** @note
   *  if DDR_CHANNELS = 1, DDR_RANKS = 1, DDR_BANKS = 8, DDR_ROWS = 65536, DDR_COLUMNS = 128,
@@ -90,14 +86,22 @@
   *  Physical address (30 bit for 1 GB HBM capacity)
   *  | row address | rank index | column address (bank index) | channel | block offset |
   *  |   11 bits   |    0 bit   |           10 bits (3 bits)  |  3 bits |    6 bits    |
-  *  e.g., HBM_CHANNELS = 8, HBM_BANKS = 8, HBM_ROWS = 2048, HBM_COLUMNS = 128 (10 - 3) for 1 GB DDR capacity.
+  *  e.g., HBM_CHANNELS = 8, HBM_BANKS = 8, HBM_ROWS = 2048, HBM_COLUMNS = 128 (10 - 3) for 1 GB HBM capacity.
   *  
   *  Physical address (28 bit for 256 MB HBM capacity)
   *  | row address | rank index | column address (bank index) | channel | block offset |
   *  |   10 bits   |    0 bit   |            9 bits (3 bits)  |  3 bits |    6 bits    |
   *  e.g., HBM_CHANNELS = 8, HBM_BANKS = 8, HBM_ROWS = 1024, HBM_COLUMNS = 64 (9 - 3) for 256 MB HBM capacity.
   */
+#else
+#define DRAM_IO_FREQ 3200ul
+#define DRAM_CHANNELS 1ul
+#define DRAM_RANKS 1ul
+#define DRAM_BANKS 8ul
+#define DRAM_ROWS 65536ul
+#define DRAM_COLUMNS 128ul
 #endif
+
 
 #if USER_CODES == ENABLE
   // the unit of DRAM_CHANNEL_WIDTH is byte
@@ -113,6 +117,12 @@
 #if USER_CODES == ENABLE
 #define PAGE_TABLE_LEVELS (5ul)
 #define MINOR_FAULT_PENALTY (200ul)
+
+#if MEMORY_USE_HYBRID == ENABLE
+#define MEMORY_CAPACITY (HBM_CAPACITY + DDR_CAPACITY)
+#else
+#define MEMORY_CAPACITY (DDR_CAPACITY)
+#endif
 
 #endif
 

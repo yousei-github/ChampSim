@@ -15,7 +15,7 @@
 #include <vector>
 
 #if USER_CODES == ENABLE
-VirtualMemory vmem(DDR_CAPACITY + HBM_CAPACITY, PAGE_SIZE, PAGE_TABLE_LEVELS, 1, MINOR_FAULT_PENALTY);
+VirtualMemory vmem(MEMORY_CAPACITY, PAGE_SIZE, PAGE_TABLE_LEVELS, 1, MINOR_FAULT_PENALTY);
 
 MEMORY_CONTROLLER memory(1.25);
 CACHE LLC("LLC", 1.0, 6, 2048, 16, 32, 32, 32, 64, 19, 1, 1, 1, LOG2_BLOCK_SIZE, 0, 0, 0, 5, &memory, CACHE::pref_t::pprefetcherDno, CACHE::repl_t::rreplacementDlru);
