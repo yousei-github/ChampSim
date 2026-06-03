@@ -51,6 +51,8 @@ core_builder_parts = {
     'dib_set': '  .dib_set({dib_set})',
     'dib_way': '  .dib_way({dib_way})',
     'dib_window': '  .dib_window({dib_window})',
+    'dib_inorder_width': '  .dib_inorder_width(champsim::bandwidth::maximum_type{{{inorder_width}}})',
+    'dib_hit_buffer_size': '  .dib_hit_buffer_size({DIB[inorder_width]})',
     'L1I': ['.l1i(&{^l1i_ptr})', '.l1i_bandwidth({^l1i_ptr}.MAX_TAG)', '.fetch_queues(&{^fetch_queues})'],
     'L1D': ['.l1d_bandwidth({^l1d_ptr}.MAX_TAG)', '.data_queues(&{^data_queues})'],
     '_branch_predictor_data': '.branch_predictor<{^branch_predictor_string}>()',
@@ -62,7 +64,9 @@ core_builder_parts = {
 dib_builder_parts = {
     'sets': '  .dib_set({DIB[sets]})',
     'ways': '  .dib_way({DIB[ways]})',
-    'window_size': '  .dib_window({DIB[window_size]})'
+    'window_size': '  .dib_window({DIB[window_size]})',
+    'inorder_width': '  .dib_inorder_width(champsim::bandwidth::maximum_type{{{DIB[inorder_width]}}})',
+    'hit_buffer_size': '  .dib_hit_buffer_size({DIB[inorder_width]})',
 }
 
 cache_builder_parts = {
@@ -420,16 +424,16 @@ def get_instantiation_lines(cores, caches, ptws, pmem, vmem, build_id):
 def get_instantiation_header(num_cpus, env, build_id):
     yield '#include "environment.h"'
     yield '#include "vmem.h"'
-    yield '#include <forward_list>'
+    yield '#include <vector>'
     yield 'template <>'
     struct_body = (
         'private:',
         'std::vector<champsim::channel> channels;',
         'MEMORY_CONTROLLER DRAM;',
         'VirtualMemory vmem;',
-        'std::forward_list<PageTableWalker> ptws;',
-        'std::forward_list<CACHE> caches;',
-        'std::forward_list<O3_CPU> cores;',
+        'std::vector<PageTableWalker> ptws;',
+        'std::vector<CACHE> caches;',
+        'std::vector<O3_CPU> cores;',
 
         'public:',
         f'constexpr static std::size_t num_cpus = {num_cpus};',
